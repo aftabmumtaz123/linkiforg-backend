@@ -1,14 +1,14 @@
 export class AppError extends Error {
-  readonly statusCode: number;
-  readonly code: string;
-  readonly details?: unknown;
-  readonly isOperational: boolean;
+  statusCode: number;
+  code: string;
+  details: unknown;
+  isOperational: boolean;
 
   constructor(
     message: string,
     statusCode = 500,
     code = 'INTERNAL_ERROR',
-    details?: unknown
+    details: unknown = null,
   ) {
     super(message);
     this.name = 'AppError';
@@ -21,7 +21,7 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: unknown) {
+  constructor(message: string, details: unknown = null) {
     super(message, 400, 'VALIDATION_ERROR', details);
     this.name = 'ValidationError';
   }
@@ -30,19 +30,17 @@ export class ValidationError extends AppError {
 export class UnsupportedPlatformError extends AppError {
   constructor(platform: string, message?: string) {
     super(
-      message ||
-        `Platform "${platform}" is not supported. Only content you own or are authorized to download can be processed.`,
+      message ??
+        `Platform "${platform}" does not provide an authorized download mechanism. Only content you own or are authorized to download can be processed.`,
       400,
-      'UNSUPPORTED_PLATFORM'
+      'UNSUPPORTED_PLATFORM',
     );
     this.name = 'UnsupportedPlatformError';
   }
 }
 
 export class AuthorizationRequiredError extends AppError {
-  constructor(
-    message = 'Authorization required. Process only content you own or are authorized to download.'
-  ) {
+  constructor(message = 'Authorization required. Process only content you own or are authorized to download.') {
     super(message, 403, 'AUTHORIZATION_REQUIRED');
     this.name = 'AuthorizationRequiredError';
   }

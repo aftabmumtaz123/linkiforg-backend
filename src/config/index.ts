@@ -12,12 +12,9 @@ const envSchema = z.object({
   STORAGE_ACCESS_KEY: z.string().min(1),
   STORAGE_SECRET_KEY: z.string().min(1),
   STORAGE_PUBLIC_URL: z.string().url().optional().or(z.literal('')).default(''),
-  STORAGE_FORCE_PATH_STYLE: z\n   .string()\n    .optional()\n    .transform((value) => value === 'true')\n    .default('false'),
+  STORAGE_FORCE_PATH_STYLE: z
     .string()
     .optional()
-    .transform((value) => value === 'true')
-    .default('false'),
-});
     .transform((value) => value === 'true')
     .default('false'),
 

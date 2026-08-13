@@ -5,12 +5,7 @@ import { downloadInstagram } from './instagram.js';
 import { downloadTikTok } from './tiktok.js';
 import { downloadFacebook } from './facebook.js';
 import { downloadTwitter } from './twitter.js';
-import {
-  DownloadOptions,
-  getBtchInfo,
-  MediaInfo,
-  FormatOption,
-} from './btch.js';
+import { getBtchInfo, type DownloadOptions, type MediaInfo, type FormatOption } from './btch.js';
 
 export interface MediaResult {
   title: string;
