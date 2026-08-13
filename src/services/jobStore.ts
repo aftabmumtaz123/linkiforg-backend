@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { unlink } from 'node:fs/promises';
 import { getDownloadUrl as getSignedDownloadUrl, getJson, uploadFile, uploadJson } from '../config/storage.js';
 import { config } from '../config/index.js';
-import { getMedia } from "./downloader/index.js";
+import { getInfo, getMedia } from "./downloader/index.js";
 import type { DownloadOptions, MediaInfo } from './downloader/index.js';
 import type { SupportedPlatform } from '../utils/urlValidator.js';
 import { AppError, NotFoundError } from '../utils/errors.js';
