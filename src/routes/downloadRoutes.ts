@@ -7,4 +7,8 @@ const router = Router();
 router.post('/info', downloadRateLimiter, infoController);
 router.post('/download', downloadRateLimiter, downloadController);
 
+router.get("/testing", (req, res) => {
+  res.json({ message: "Testing route is working!" });
+});
+
 export default router;
