@@ -1,10 +1,10 @@
-import { SupportedPlatform } from '../../utils/urlValidator.js';
+import { AppError } from '../../utils/errors.js';
+import type { SupportedPlatform } from '../../utils/urlValidator.js';
 import { downloadYouTube } from './youtube.js';
 import { downloadInstagram } from './instagram.js';
 import { downloadTikTok } from './tiktok.js';
 import { downloadFacebook } from './facebook.js';
 import { downloadTwitter } from './twitter.js';
-import { AppError } from '../../middleware/errorHandler.js';
 import {
   DownloadOptions,
   getBtchInfo,
@@ -34,9 +34,6 @@ const providers: Record<SupportedPlatform, DownloaderFn> = {
   twitter: downloadTwitter,
 };
 
-/**
- * Platform-agnostic entry point.
- */
 export async function getMedia(
   url: string,
   platform: SupportedPlatform,
@@ -49,9 +46,6 @@ export async function getMedia(
   return provider(url, options);
 }
 
-/**
- * Fetch available formats / metadata without downloading the file.
- */
 export async function getInfo(
   url: string,
   platform: SupportedPlatform

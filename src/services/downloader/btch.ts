@@ -11,7 +11,7 @@ import {
   fbdown,
   twitter,
 } from 'btch-downloader';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/logger.ts';
 import { AppError } from '../../middleware/errorHandler.js';
 import type { SupportedPlatform } from '../../utils/urlValidator.js';
 import type { MediaResult } from './index.js';
@@ -22,6 +22,7 @@ export interface FormatOption {
   formatId: string;
   ext: string;
   resolution?: string;
+  
   height?: number;
   width?: number;
   fps?: number;

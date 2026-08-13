@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Media URL processing API",
   "main": "dist/server.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "server": "tsx src/server.ts",

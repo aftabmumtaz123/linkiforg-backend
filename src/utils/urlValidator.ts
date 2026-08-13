@@ -1,56 +1,15 @@
-import { URL } from 'url';
-import { isIP } from 'net';
-
 const SUPPORTED_HOSTS = [
-  // YouTube
-  'youtube.com',
-  'www.youtube.com',
-  'm.youtube.com',
-  'youtu.be',
-  'www.youtu.be',
-  // Instagram
-  'instagram.com',
-  'www.instagram.com',
-  // TikTok
-  'tiktok.com',
-  'www.tiktok.com',
-  'vm.tiktok.com',
-  'm.tiktok.com',
-  'vt.tiktok.com',
-  // Facebook
-  'facebook.com',
-  'www.facebook.com',
-  'm.facebook.com',
-  'fb.watch',
-  'www.fb.watch',
-  // Twitter / X
-  'twitter.com',
-  'www.twitter.com',
-  'mobile.twitter.com',
-  'x.com',
-  'www.x.com',
-];
+  'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be',
+  'instagram.com', 'www.instagram.com',
+  'tiktok.com', 'www.tiktok.com', 'vm.tiktok.com', 'm.tiktok.com', 'vt.tiktok.com',
+  'facebook.com', 'www.facebook.com', 'm.facebook.com', 'fb.watch', 'www.fb.watch',
+  'twitter.com', 'www.twitter.com', 'mobile.twitter.com', 'x.com', 'www.x.com',
+] as const;
 
 const BLOCKED_HOSTS = new Set([
-  'localhost',
-  '127.0.0.1',
-  '0.0.0.0',
-  '::1',
-  'metadata.google.internal',
-  '169.254.169.254',
+  'localhost', '127.0.0.1', '0.0.0.0', '::1',
+  'metadata.google.internal', '169.254.169.254',
 ]);
-
-const PRIVATE_IP_RANGES = [
-  /^10\./,
-  /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-  /^192\.168\./,
-  /^127\./,
-  /^169\.254\./,
-  /^fc00:/i,
-  /^fe80:/i,
-  /^::1$/,
-  /^0\.0\.0\.0$/,
-];
 
 export type SupportedPlatform =
   | 'youtube'
@@ -60,14 +19,21 @@ export type SupportedPlatform =
   | 'twitter';
 
 export function isPrivateOrLocalHost(hostname: string): boolean {
-  if (BLOCKED_HOSTS.has(hostname.toLowerCase())) return true;
+  const host = hostname.toLowerCase();
+  if (BLOCKED_HOSTS.has(host)) return true;
 
-  const ipVersion = isIP(hostname);
-  if (ipVersion) {
-    return PRIVATE_IP_RANGES.some((re) => re.test(hostname));
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+    const parts = host.split('.').map(Number);
+    return (
+      parts[0] === 10 ||
+      parts[0] === 127 ||
+      (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+      (parts[0] === 192 && parts[1] === 168) ||
+      (parts[0] === 169 && parts[1] === 254)
+    );
   }
 
-  return false;
+  return host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:');
 }
 
 export function validateMediaUrl(rawUrl: string): {
@@ -77,6 +43,7 @@ export function validateMediaUrl(rawUrl: string): {
   error?: string;
 } {
   let parsed: URL;
+
   try {
     parsed = new URL(rawUrl.trim());
   } catch {
@@ -94,47 +61,27 @@ export function validateMediaUrl(rawUrl: string): {
   }
 
   const matchedHost = SUPPORTED_HOSTS.find(
-    (h) => hostname === h || hostname.endsWith(`.${h}`)
+    (host) => hostname === host || hostname.endsWith(`.${host}`)
   );
 
   if (!matchedHost) {
-    return { valid: false, error: 'Unsupported source' };
+    return { valid: false, error: 'Unsupported source.' };
   }
 
   let platform: SupportedPlatform;
-  if (
-    matchedHost.includes('youtube') ||
-    matchedHost.includes('youtu.be')
-  ) {
+
+  if (matchedHost.includes('youtube') || matchedHost.includes('youtu.be')) {
     platform = 'youtube';
   } else if (matchedHost.includes('instagram')) {
     platform = 'instagram';
   } else if (matchedHost.includes('tiktok')) {
     platform = 'tiktok';
-  } else if (
-    matchedHost.includes('facebook') ||
-    matchedHost.includes('fb.watch')
-  ) {
+  } else if (matchedHost.includes('facebook') || matchedHost.includes('fb.watch')) {
     platform = 'facebook';
-  } else if (
-    matchedHost.includes('twitter') ||
-    matchedHost === 'x.com' ||
-    matchedHost.endsWith('.x.com')
-  ) {
+  } else if (matchedHost.includes('twitter') || matchedHost.includes('x.com')) {
     platform = 'twitter';
   } else {
-    return { valid: false, error: 'Unsupported source' };
-  }
-
-  if (platform === 'youtube') {
-    const hasId =
-      parsed.searchParams.has('v') ||
-      parsed.pathname.includes('/watch') ||
-      parsed.pathname.includes('/shorts/') ||
-      parsed.pathname.length > 1;
-    if (!hasId && !hostname.includes('youtu.be')) {
-      return { valid: false, error: 'Invalid YouTube URL.' };
-    }
+    return { valid: false, error: 'Unsupported source.' };
   }
 
   return {

@@ -1,26 +1,37 @@
 export class AppError extends Error {
-  constructor(message, statusCode = 500, code = 'INTERNAL_ERROR', details = null) {
+  readonly statusCode: number;
+  readonly code: string;
+  readonly details?: unknown;
+  readonly isOperational: boolean;
+
+  constructor(
+    message: string,
+    statusCode = 500,
+    code = 'INTERNAL_ERROR',
+    details?: unknown
+  ) {
     super(message);
     this.name = 'AppError';
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
     this.isOperational = true;
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message, details = null) {
+  constructor(message: string, details?: unknown) {
     super(message, 400, 'VALIDATION_ERROR', details);
     this.name = 'ValidationError';
   }
 }
 
 export class UnsupportedPlatformError extends AppError {
-  constructor(platform, message = null) {
+  constructor(platform: string, message?: string) {
     super(
       message ||
-        `Platform "${platform}" does not provide an authorized download mechanism. Only content you own or are authorized to download can be processed.`,
+        `Platform "${platform}" is not supported. Only content you own or are authorized to download can be processed.`,
       400,
       'UNSUPPORTED_PLATFORM'
     );
@@ -29,7 +40,9 @@ export class UnsupportedPlatformError extends AppError {
 }
 
 export class AuthorizationRequiredError extends AppError {
-  constructor(message = 'Authorization required. Process only content you own or are authorized to download.') {
+  constructor(
+    message = 'Authorization required. Process only content you own or are authorized to download.'
+  ) {
     super(message, 403, 'AUTHORIZATION_REQUIRED');
     this.name = 'AuthorizationRequiredError';
   }
@@ -50,7 +63,7 @@ export class RateLimitError extends AppError {
 }
 
 export class JobError extends AppError {
-  constructor(message, code = 'JOB_ERROR') {
+  constructor(message: string, code = 'JOB_ERROR') {
     super(message, 422, code);
     this.name = 'JobError';
   }

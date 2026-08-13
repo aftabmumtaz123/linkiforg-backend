@@ -1,69 +1,99 @@
-import { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
-import { streamDownload, fetchMediaInfo } from '../services/downloadService.js';
+import { createJob, getJob as readJob, getJobDownloadUrl } from '../services/jobStore.js';
+import { getInfo } from '../services/downloader/index.js';
+import { validateMediaUrl } from '../utils/urlValidator.js';
+import { ValidationError } from '../utils/errors.js';
 
-const urlSchema = z
-  .string()
-  .min(10, 'URL is required')
-  .max(2048, 'URL is too long')
-  .url('Please enter a valid media URL.');
+const urlSchema = z.string().trim().min(10).max(2048).url('Please enter a valid media URL.');
 
-const downloadSchema = z.object({
+const createSchema = z.object({
   url: urlSchema,
+  quality: z.string().max(120).optional(),
   format: z.string().max(120).optional(),
   audioOnly: z.boolean().optional(),
 });
 
-const infoSchema = z.object({
-  url: urlSchema,
-});
+const infoSchema = z.object({ url: urlSchema });
 
-export async function downloadController(
+function getPlatform(url: string) {
+  const result = validateMediaUrl(url);
+  if (!result.valid || !result.platform || !result.normalizedUrl) {
+    throw new ValidationError(result.error || 'Unsupported source.');
+  }
+  return result;
+}
+
+export async function createDownloadJob(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const parsed = downloadSchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw parsed.error;
-    }
+    const data = createSchema.parse(req.body);
+    const result = getPlatform(data.url);
 
-    await streamDownload(parsed.data.url, res, {
-      format: parsed.data.format,
-      audioOnly: parsed.data.audioOnly,
+    const job = await createJob(result.normalizedUrl!, result.platform!, {
+      format: data.quality ?? data.format,
+      audioOnly: data.audioOnly,
     });
-  } catch (err) {
-    if (res.headersSent) {
-      res.end();
-      return;
-    }
-    next(err);
+
+    res.status(202).json({
+      success: true,
+      jobId: job.id,
+      job,
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
-export async function infoController(
+export async function getJob(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const parsed = infoSchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw parsed.error;
-    }
+    const job = await readJob(req.params.jobId);
+    res.json({ success: true, job });
+  } catch (error) {
+    next(error);
+  }
+}
 
-    const info = await fetchMediaInfo(parsed.data.url);
+export async function getDownloadUrl(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const url = await getJobDownloadUrl(req.params.jobId);
+    res.json({ success: true, url });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function mediaInfo(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const data = infoSchema.parse(req.body);
+    const result = getPlatform(data.url);
+    const info = await getInfo(result.normalizedUrl!, result.platform!);
+
     res.json({
       success: true,
-      platform: info.platform,
+      platform: result.platform,
       title: info.title,
       thumbnail: info.thumbnail,
       duration: info.duration,
       uploader: info.uploader,
       formats: info.formats,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 }
