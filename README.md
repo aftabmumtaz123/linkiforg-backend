@@ -1,46 +1,99 @@
-# MediaProcess Backend
+# MediaProcess — Local Backend
 
-TypeScript + Express backend configured for NodeNext/ESM and Vercel.
+This backend is configured for **local file handling only**.
 
-## Local setup
+There is **no S3, AWS, Cloudflare R2, Redis, or cloud file storage** in this version.
+
+The flow is:
+
+`Frontend -> Node/Express -> media provider -> local temporary file -> browser`
+
+The media source itself is necessarily fetched over the internet. No downloaded file is uploaded to a storage service.
+
+## Requirements
+
+- Node.js 20+
+- npm
+
+## Run locally
 
 ```bash
 npm install
-npm run build
-npm start
 ```
 
-Development:
+Copy `.env.example` to `.env` and adjust the values if needed.
 
 ```bash
 npm run dev
 ```
 
-Copy `.env.example` to `.env` and provide the S3-compatible storage values.
+The API starts at `http://localhost:4000`.
+
+## Endpoints
+
+### Health
+
+`GET /health`
+
+### Media information
+
+`POST /api/info`
+
+```json
+{ "url": "https://..." }
+```
+
+### Job-based download
+
+`POST /api/download`
+
+```json
+{
+  "url": "https://...",
+  "quality": "mp4"
+}
+```
+
+Returns a `jobId`. Poll:
+
+`GET /api/jobs/:jobId`
+
+When the job is completed:
+
+`GET /api/jobs/:jobId/download`
+
+returns a local URL. The browser then receives the file from:
+
+`GET /api/jobs/:jobId/file`
+
+### Direct download
+
+`POST /api/download/direct`
+
+This endpoint downloads the media to a temporary local file and streams it directly to the browser. It does not create a job record.
+
+## Temporary files
+
+Downloaded files are stored under the operating system temporary directory and removed after delivery. Job files are also automatically cleaned after `JOB_TTL_HOURS`.
+
+## Environment
+
+```env
+NODE_ENV=development
+PORT=4000
+CORS_ORIGIN=http://localhost:3000
+PUBLIC_BASE_URL=http://localhost:4000
+MAX_FILE_SIZE_MB=500
+JOB_TTL_HOURS=24
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=30
+LOG_LEVEL=info
+```
+
+No storage credentials are required.
 
 ## Important deployment note
 
-This project intentionally contains only TypeScript source files under `src/`. Imports use `.js` extensions because the compiler targets NodeNext/ESM; do not change those imports to `.ts`.
+This version is intentionally a **persistent local Node.js server**. Do not deploy the local-file workflow as a Vercel serverless function. Use it on your development PC or a persistent Node.js/VPS server.
 
-Before deploying to Vercel, make sure old generated/source `.js` files are not present in `src/`, and redeploy a fresh commit so Vercel does not retain stale source paths.
-
-## Vercel environment variables
-
-Required:
-
-- `STORAGE_ENDPOINT`
-- `STORAGE_BUCKET`
-- `STORAGE_ACCESS_KEY`
-- `STORAGE_SECRET_KEY`
-
-Optional:
-
-- `STORAGE_REGION`
-- `STORAGE_PUBLIC_URL`
-- `STORAGE_FORCE_PATH_STYLE`
-- `CORS_ORIGIN`
-- `PORT`
-- `MAX_FILE_SIZE_MB`
-- `RATE_LIMIT_WINDOW_MS`
-- `RATE_LIMIT_MAX`
-- `LOG_LEVEL`
+Only download content you own or are authorized to download and follow the applicable platform terms.

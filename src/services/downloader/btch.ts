@@ -12,6 +12,7 @@ import {
   twitter,
 } from 'btch-downloader';
 import { logger } from '../../utils/logger.js';
+import { config } from '../../config/index.js';
 import { AppError } from '../../utils/errors.js';
 import type { SupportedPlatform } from '../../utils/urlValidator.js';
 import type { MediaResult } from './index.js';
@@ -635,6 +636,11 @@ export async function runBtchDownload(
     if (!stats.isFile() || stats.size === 0) {
       await fs.rm(jobDir, { recursive: true, force: true }).catch(() => undefined);
       throw new AppError('Downloaded file is empty or invalid.', 500, 'PROCESSING_FAILURE');
+    }
+
+    if (stats.size > config.maxFileSizeBytes) {
+      await fs.rm(jobDir, { recursive: true, force: true }).catch(() => undefined);
+      throw new AppError('The downloaded file is larger than the configured limit.', 413, 'FILE_TOO_LARGE');
     }
 
     logger.info(
