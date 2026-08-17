@@ -6,11 +6,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
-  STORAGE_ENDPOINT: z.string().url(),
-  STORAGE_REGION: z.string().default('us-east-1'),
-  STORAGE_BUCKET: z.string().min(1),
-  STORAGE_ACCESS_KEY: z.string().min(1),
-  STORAGE_SECRET_KEY: z.string().min(1),
+ 
   STORAGE_PUBLIC_URL: z.string().url().optional().or(z.literal('')).default(''),
   STORAGE_FORCE_PATH_STYLE: z
     .string()
@@ -38,11 +34,7 @@ export const config = {
   port: env.PORT,
   corsOrigin: env.CORS_ORIGIN,
   storage: {
-    endpoint: env.STORAGE_ENDPOINT,
-    region: env.STORAGE_REGION,
-    bucket: env.STORAGE_BUCKET,
-    accessKey: env.STORAGE_ACCESS_KEY,
-    secretKey: env.STORAGE_SECRET_KEY,
+   
     publicUrl: env.STORAGE_PUBLIC_URL || undefined,
     forcePathStyle: env.STORAGE_FORCE_PATH_STYLE,
   },
