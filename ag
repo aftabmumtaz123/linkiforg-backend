@@ -1,0 +1,15 @@
+* [33mc25f8cd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: refactor backend for local media processing; remove cloud storage dependencies and add direct download functionality
+* [33mf3daaa0[m fix: correct indentation in environment configuration for STORAGE_REGION
+* [33m2d9abb9[m refactor: remove unused storage configuration and downloader service
+* [33m51898c0[m feat: add @types/morgan for improved logging type definitions; update jobStore service to import getInfo
+* [33m601e111[m fix: remove unused import for getInfo in jobStore service
+* [33md20d1ab[m feat: update README and improve error handling in middleware; refactor downloader services for better type usage
+* [33m113057c[m feat: implement media download and job management features with error handling
+* [33ma6bbb2e[m chore: remove unused app, middleware, and route files
+* [33m7131da3[m chore: remove example environment configuration file
+* [33md66e961[m Remove deprecated storage, download, and media processing services
+* [33m07cc82c[m chore: upgrade nanoid to version 6.0.1 and remove unused download controller and queue services
+* [33m046b44b[m chore: update nanoid dependency to version 3.3.18
+* [33m111c61e[m chore: add nanoid dependency
+* [33ma5fddc1[m chore: update dependencies and add testing route
+* [33m7a279bd[m First commit

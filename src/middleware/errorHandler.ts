@@ -1,62 +1,37 @@
-import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import { ZodError } from 'zod';
+import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config/index.js';
 
-export const errorHandler: ErrorRequestHandler = (
+export function errorHandler(
   err: unknown,
   req: Request,
   res: Response,
-  _next: NextFunction
-) => {
-  if (res.headersSent) {
-    return;
-  }
+  _next: NextFunction,
+): void {
+  const appError = err instanceof AppError ? err : null;
+  const statusCode = appError?.statusCode ?? 500;
+  const code = appError?.code ?? 'INTERNAL_ERROR';
+  const message = appError?.isOperational || statusCode < 500
+    ? (err instanceof Error ? err.message : 'Request failed')
+    : 'An unexpected error occurred';
 
-  if (err instanceof ZodError) {
-    res.status(400).json({
-      success: false,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Invalid request data.',
-        details: err.flatten(),
-      },
-    });
-    return;
-  }
-
-  const appError =
-    err instanceof AppError
-      ? err
-      : new AppError(
-          err instanceof Error ? err.message : 'Internal server error',
-          500,
-          'INTERNAL_ERROR'
-        );
-
-  if (appError.statusCode >= 500) {
+  if (statusCode >= 500) {
     logger.error({ err, path: req.path, method: req.method }, 'Unhandled error');
   } else {
-    logger.warn(
-      { code: appError.code, message: appError.message, path: req.path },
-      'Client error'
-    );
+    logger.warn({ code, message, path: req.path }, 'Client error');
   }
 
-  res.status(appError.statusCode).json({
+  const body: { success: false; error: { code: string; message: string; details?: unknown } } = {
     success: false,
-    error: {
-      code: appError.code,
-      message: appError.message,
-      ...(configEnvIsDevelopment() && appError.details
-        ? { details: appError.details }
-        : {}),
-    },
-  });
-};
+    error: { code, message },
+  };
 
-function configEnvIsDevelopment(): boolean {
-  return process.env.NODE_ENV !== 'production';
+  if (config.env === 'development' && appError?.details != null) {
+    body.error.details = appError.details;
+  }
+
+  res.status(statusCode).json(body);
 }
 
 export function notFoundHandler(req: Request, res: Response): void {

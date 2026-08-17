@@ -1,36 +1,12 @@
 # MediaProcess Backend
 
-TypeScript/Node.js/Express backend for media URL analysis and downloads.
+TypeScript + Express backend configured for NodeNext/ESM and Vercel.
 
-## Stack
-
-- Node.js + Express
-- TypeScript with `NodeNext` / ESM
-- `btch-downloader` providers
-- S3-compatible object storage
-- Zod validation
-- Pino logging
-- Vercel serverless entrypoint
-
-## Run locally
-
-1. Copy `.env.example` to `.env`.
-2. Fill in the S3-compatible storage credentials.
-3. Install dependencies:
+## Local setup
 
 ```bash
 npm install
-```
-
-4. Build:
-
-```bash
 npm run build
-```
-
-5. Start:
-
-```bash
 npm start
 ```
 
@@ -40,21 +16,31 @@ Development:
 npm run dev
 ```
 
-## API
+Copy `.env.example` to `.env` and provide the S3-compatible storage values.
 
-- `GET /health`
-- `GET /api/testing`
-- `POST /api/info` with `{ "url": "..." }`
-- `POST /api/download` with `{ "url": "...", "quality": "..." }`
-- `GET /api/jobs/:jobId`
-- `GET /api/jobs/:jobId/download`
+## Important deployment note
 
-## Vercel
+This project intentionally contains only TypeScript source files under `src/`. Imports use `.js` extensions because the compiler targets NodeNext/ESM; do not change those imports to `.ts`.
 
-The serverless entrypoint is `api/index.ts`.
+Before deploying to Vercel, make sure old generated/source `.js` files are not present in `src/`, and redeploy a fresh commit so Vercel does not retain stale source paths.
 
-Configure the same storage environment variables in the Vercel project settings. Do not commit `.env` or storage secrets.
+## Vercel environment variables
 
-### Important runtime note
+Required:
 
-The download job currently performs provider resolution, downloading, and object-storage upload inside the request. This keeps the implementation reliable in a serverless environment because it does not depend on a background process surviving after the function returns. Long downloads can still exceed the serverless function's execution limit; for long-running production downloads, use a dedicated worker/queue service.
+- `STORAGE_ENDPOINT`
+- `STORAGE_BUCKET`
+- `STORAGE_ACCESS_KEY`
+- `STORAGE_SECRET_KEY`
+
+Optional:
+
+- `STORAGE_REGION`
+- `STORAGE_PUBLIC_URL`
+- `STORAGE_FORCE_PATH_STYLE`
+- `CORS_ORIGIN`
+- `PORT`
+- `MAX_FILE_SIZE_MB`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX`
+- `LOG_LEVEL`
